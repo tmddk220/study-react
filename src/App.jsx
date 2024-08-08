@@ -1,68 +1,128 @@
 import "./App.css";
-import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import { useReducer, useRef, createContext } from "react";
+import { Routes, Route } from "react-router-dom";
+
 import Home from "./pages/Home";
 import Diary from "./pages/Diary";
 import New from "./pages/New";
+import Edit from "./pages/Edit";
 import Notfound from "./pages/Notfound";
-import Button from "./components/Button";
-import Header from "./components/Header";
 
-import { getEmotionImage } from "./util/get-emotion-image";
+const mockData = [
+  {
+    id: 1,
+    createdDate: new Date().getTime(),
+    emotionId: 1,
+    content: "1번 일기 내용",
+  },
+  {
+    id: 2,
+    createdDate: new Date().getTime(),
+    emotionId: 2,
+    content: "2번 일기 내용",
+  },
+];
 
-// 1. "/" : 모든 일기를 조회하는 Home 페이지
-// 2. "/new" : 새로운 일기를 작성하는 New 페이지
-// 3. "/diary" : 일기를 상세히 조회하는 Diary 페이지
-// a태그 대신 Link 컴포넌트 사용하기
+function reducer(state, action) {
+  switch (action.type) {
+    case "CREATE":
+      return [action.data, ...state];
+    case "UPDATE":
+      return state.map((item) =>
+        String(item.id) === String(action.data.id) ? action.data : item
+      );
+    case "DELETE":
+      return state.filter((item) => String(item.id) !== String(action.id));
+    default:
+      return state;
+  }
+}
+
+const DiaryStateContext = createContext();
+const DiaryDispatchContext = createContext();
+
 function App() {
-  const nav = useNavigate();
+  const [data, dispatch] = useReducer(reducer, mockData);
+  const idRef = useRef(3);
 
-  const onClickButton = () => {
-    nav("/new");
+  // 새로운 일기 추가
+  const onCreate = (createdDate, emotionId, content) => {
+    dispatch({
+      type: "CREATE",
+      data: {
+        id: idRef.current++,
+        createdDate,
+        emotionId,
+        content,
+      },
+    });
   };
 
-  // 이미지 최적화 : 이미지를 많이 불러올 필요가 없을 때 사용하는 것이 바람직함
-  // -> 메모리에 저장되어 용량&시간 이슈 해결
-  // import를 통해 assets에서 이미지를 불러오면 데이터 URI로 포맷된다.(암호문 처럼)
-  // 이미지와 같은 외부 데이터들을 문자열 형태로 브라우저의 메모리에 캐싱하기 위해 사용
-  // public에서 url로 불러온다면 새로고침할 때마다 매번 불러옴
+  // 기존 일기 수정
+  const onUpdate = (id, createdDate, emotionId, content) => {
+    dispatch({
+      type: "UPDATE",
+      data: {
+        id,
+        createdDate,
+        emotionId,
+        content,
+      },
+    });
+  };
+
+  // 기존 일기 삭제
+  const onDelete = (id) => {
+    dispatch({
+      type: "DELETE",
+      data: {
+        id,
+      },
+    });
+  };
 
   return (
     <>
-      <Header
-        title={"Header"}
-        leftchild={<Button text={"Left"} />}
-        rightchild={<Button text={"Right"} />}
-      />
-
-      <Button
-        text={"123"}
+      <button
         onClick={() => {
-          console.log("123번 버튼 클릭!");
+          onCreate(new Date().getTime(), 1, "Hello");
         }}
-      />
+      >
+        일기 추가 테스트
+      </button>
 
-      <Button
-        text={"123"}
-        type={"POSITIVE"}
+      <button
         onClick={() => {
-          console.log("123번 버튼 클릭!");
+          onUpdate(1, new Date().getTime(), 3, "수정된 일기입니다.");
         }}
-      />
+      >
+        일기 수정 테스트
+      </button>
 
-      <Button
-        text={"123"}
-        type={"NEGATIVE"}
+      <button
         onClick={() => {
-          console.log("123번 버튼 클릭!");
+          onDelete(1);
         }}
-      />
-
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/new" element={<New />} />
-        <Route path="/diary/:id" element={<Diary />} />
-        <Route path="*" element={<Notfound />} />
-      </Routes>
+      >
+        일기 삭제 테스트
+      </button>
+      <DiaryStateContext.Provider value={data}>
+        <DiaryDispatchContext.Provider
+          value={{
+            onCreate,
+            onUpdate,
+            onDelete,
+          }}
+        >
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/new" element={<New />} />
+            <Route path="/diary/:id" element={<Diary />} />
+            <Route path="/edit/:id" element={<Edit />} />
+            <Route path="*" element={<Notfound />} />
+          </Routes>
+        </DiaryDispatchContext.Provider>
+      </DiaryStateContext.Provider>
     </>
   );
 }

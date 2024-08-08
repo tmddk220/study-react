@@ -1,7 +1,43 @@
+/*
 @font-face {
   font-family: "NanumPenScript";
   src: url("/NanumPenScript-Regular.ttf");
 }
+*/
+
+@font-face {
+  font-family: "Ownglyph_ryuttung-Rg";
+  src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/2405-2@1.0/Ownglyph_ryuttung-Rg.woff2")
+    format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Ownglyph_noocar-Rg";
+  src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/2405-2@1.0/Ownglyph_noocar-Rg.woff2")
+    format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Ownglyph_UNZ-Rg";
+  src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/Ownglyph_UNZ-Rg.woff2")
+    format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "MangoDdobak-B";
+  src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/2405-3@1.1/MangoDdobak-B.woff2")
+    format("woff2");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@import url(//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSansNeo.css);
 
 html,
 body {
@@ -22,5 +58,6 @@ body {
 }
 
 body * {
-  font-family: "NanumPenScript";
+  /*font-family: "Ownglyph_ryuttung-Rg";*/
+  font-family: "'Spoqa Han Sans Neo', 'sans-serif';";
 }
