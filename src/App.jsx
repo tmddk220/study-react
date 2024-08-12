@@ -1,5 +1,5 @@
 import "./App.css";
-import { useReducer, useRef, createContext } from "react";
+import { useReducer, useRef, createContext, useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
@@ -8,48 +8,80 @@ import New from "./pages/New";
 import Edit from "./pages/Edit";
 import Notfound from "./pages/Notfound";
 
-const mockData = [
-  {
-    id: 1,
-    createdDate: new Date("2024-08-08").getTime(),
-    emotionId: 1,
-    content: "1번 일기 내용",
-  },
-  {
-    id: 2,
-    createdDate: new Date("2024-08-07").getTime(),
-    emotionId: 2,
-    content: "2번 일기 내용",
-  },
-  {
-    id: 3,
-    createdDate: new Date("2024-07-09").getTime(),
-    emotionId: 3,
-    content: "3번 일기 내용",
-  },
-];
-
 function reducer(state, action) {
+  let nextState;
+
   switch (action.type) {
-    case "CREATE":
-      return [action.data, ...state];
-    case "UPDATE":
-      return state.map((item) =>
+    case "INIT":
+      return action.data;
+    case "CREATE": {
+      nextState = [action.data, ...state];
+      break;
+    }
+    case "UPDATE": {
+      nextState = state.map((item) =>
         String(item.id) === String(action.data.id) ? action.data : item
       );
-    case "DELETE":
-      return state.filter((item) => String(item.id) !== String(action.id));
+      break;
+    }
+    case "DELETE": {
+      nextState = state.filter((item) => String(item.id) !== String(action.id));
+      break;
+    }
     default:
       return state;
   }
+
+  localStorage.setItem("diary", JSON.stringify(nextState));
+  return nextState;
 }
 
 export const DiaryStateContext = createContext();
 export const DiaryDispatchContext = createContext();
 
 function App() {
-  const [data, dispatch] = useReducer(reducer, mockData);
-  const idRef = useRef(3);
+  const [isLoading, setIsLoading] = useState(true);
+  const [data, dispatch] = useReducer(reducer, []);
+  const idRef = useRef(0);
+
+  useEffect(() => {
+    const storedData = localStorage.getItem("diary");
+    if (!storedData) {
+      setIsLoading(false);
+      return;
+    }
+    const parsedData = JSON.parse(storedData);
+
+    if (!Array.isArray(parsedData)) {
+      setIsLoading(false);
+      return;
+    }
+
+    let maxId = 0;
+    parsedData.forEach((item) => {
+      if (Number(item.id) > maxId) {
+        maxId = Number(item.id);
+      }
+    });
+
+    idRef.current = maxId + 1;
+
+    dispatch({
+      type: "INIT",
+      data: parsedData,
+    });
+    setIsLoading(false);
+  }, []);
+
+  // 로컬 스토리지 사용법
+  // localStorage.setItem("test", "hello");
+  // localStorage.setItem("person", JSON.stringify({ name: "이승아" }));
+
+  // console.log(localStorage.getItem("test"));
+  // console.log(JSON.parse(localStorage.getItem("person")));
+  // parse 함수의 경우 들어있는 값이 undefined라면 오류 발생. 주의할 것.
+
+  // localStorage.removeItem("test");
 
   // 새로운 일기 추가
   const onCreate = (createdDate, emotionId, content) => {
@@ -81,11 +113,13 @@ function App() {
   const onDelete = (id) => {
     dispatch({
       type: "DELETE",
-      data: {
-        id,
-      },
+      id,
     });
   };
+
+  if (isLoading) {
+    return <div>데이터 로딩중입니다...</div>;
+  }
 
   return (
     <>
